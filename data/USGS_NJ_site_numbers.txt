@@ -1,0 +1,102 @@
+#
+# USGS NWISWeb site number list
+#
+# This file can be used to retrieve data from the
+# USGS NWISWeb internet based retrieval system using
+# the 'File of site Numbers' search criteria.
+#
+# This file can be edited, but the number of columns
+# must be equal for each row, and the 'site_no' column
+# must remain.
+#
+# The columns include:
+#  agency_cd  -- Agency code.  If no value is found, 'USGS' is assumed
+#  site_no    -- USGS site number
+#  station_nm -- USGS site name. This column is include for viewing only,
+#                                it is not used by the nwisweb system.
+#
+agency_cd	site_no	station_nm
+5s	15s	56s
+USGS	01379000	Passaic River near Millington NJ
+USGS	01379500	Passaic River near Chatham NJ
+USGS	01379530	Canoe Brook near Summit NJ
+USGS	01379699	Rockaway River at NJ Rt 15 at Berkshire Valley NJ
+USGS	01379700	Rockaway River at Berkshire Valley NJ
+USGS	01379773	Green Pond Brook at Picatinny Arsenal NJ
+USGS	01379780	Green Pond Bk blw Picatinny Lk at Picatinny Ars NJ
+USGS	01379790	Green Pond Brook at Wharton NJ
+USGS	01379845	Rockaway River at Warren Street at Dover NJ
+USGS	01379868	Mill Brook at Route 10 at Victory Gardens NJ
+USGS	01380000	Beaver Brook at outlet of Splitrock Reservoir NJ
+USGS	01380100	Beaver Brook at Rockaway NJ
+USGS	01380450	Rockaway River at Main Street at Boonton NJ
+USGS	01380500	Rockaway River above Reservoir at Boonton NJ
+USGS	01381000	Rockaway River below Reservoir at Boonton NJ
+USGS	01381400	Whippany River near Morristown NJ
+USGS	01381500	Whippany River at Morristown NJ
+USGS	01381800	Whippany River near Pine Brook NJ
+USGS	01381900	Passaic River at Pine Brook NJ
+USGS	01381940	Passaic R at Horse Neck Bridge near Pine Bk NJ
+USGS	01382210	Pequannock River at Oak Ridge NJ
+USGS	01382800	Pequannock River at Riverdale NJ
+USGS	01388700	Beaver Dam Brook at Lincoln Park NJ
+USGS	01389534	Peckman River at Ozone Ave at Verona NJ
+USGS	01392170	Third River at Bloomfield NJ
+USGS	01392500	Second River at Belleville NJ
+USGS	01393450	Elizabeth River at Ursino Lake at Elizabeth NJ
+USGS	01393890	East Branch Rahway River at Maplewood NJ
+USGS	01393895	East Br Rahway Riv at Millburn Ave at Millburn NJ
+USGS	01394000	West Branch Rahway River at Millburn NJ
+USGS	01394500	Rahway River near Springfield NJ
+USGS	01394620	Rahway River at Kenilworth NJ
+USGS	01395000	Rahway River at Rahway NJ
+USGS	01396000	Robinsons Branch at Rahway NJ
+USGS	01396001	Robinsons Branch at Maple Ave at Rahway NJ
+USGS	01396091	South Br Raritan River at Rt 46 at Budd Lake NJ
+USGS	01396152	Flanders Brook at US Route 206 near Flanders NJ
+USGS	01396190	South Branch Raritan River at Four Bridges NJ
+USGS	01397420	SB Raritan R at Black Point Rd at Neshanic Sta NJ
+USGS	01398102	South Branch Raritan River at South Branch NJ
+USGS	01398107	Holland Brook at Readington NJ
+USGS	01398500	North Branch Raritan River near Far Hills NJ
+USGS	01398900	North Branch Raritan River at Bedminster NJ
+USGS	01399100	Middle Brook at Burnt Mills NJ
+USGS	01399190	Lamington (Black) River at Succasunna NJ
+USGS	01399200	Lamington (Black) River near Ironia NJ
+USGS	01399500	Lamington (Black) River near Pottersville NJ
+USGS	01399525	Axle Brook near Pottersville NJ
+USGS	01399780	Lamington River at Burnt Mills NJ
+USGS	01399830	North Branch Raritan River at North Branch NJ
+USGS	01400000	North Branch Raritan River near Raritan NJ
+USGS	01400010	North Branch Raritan River at South Branch NJ
+USGS	01400300	Peters Brook near Raritan NJ
+USGS	01400350	Macs Brook at Somerville NJ
+USGS	01400360	Peters Brook at Mercer St at Somerville NJ
+USGS	01400500	Raritan River at Manville NJ
+USGS	01400730	Millstone River at Plainsboro NJ
+USGS	01401301	Millstone River at Carnegie Lake at Princeton NJ
+USGS	01401650	Pike Run at Belle Mead NJ
+USGS	01401750	Millstone River at Griggstown NJ
+USGS	01402000	Millstone River at Blackwells Mills NJ
+USGS	01402500	Millstone River at Millstone NJ
+USGS	01402540	Millstone River at Weston NJ
+USGS	01402600	Royce Brook tributary near Belle Mead NJ
+USGS	01402630	Royce Brook at Hamilton Road near Manville NJ
+USGS	01403060	Raritan River below Calco Dam at Bound Brook NJ
+USGS	01403150	West Branch Middle Brook near Martinsville NJ
+USGS	01403160	West Branch Middle Brook near Somerville NJ
+USGS	01403200	Middle Brook at Bound Brook NJ
+USGS	01403400	Green Brook at Seeley Mills NJ
+USGS	01403500	Green Brook at Plainfield NJ
+USGS	01403535	East Br Stony Brook at Best Lake at Watchung NJ
+USGS	01403540	Stony Brook at Watchung NJ
+USGS	01403570	Stony Brook at North Plainfield NJ
+USGS	01403600	Green Brook at Rock Avenue at Plainfield NJ
+USGS	01403900	Bound Brook at Middlesex NJ
+USGS	01405000	Lawrence Brook at Farrington Dam NJ
+USGS	01405030	Lawrence Brook at Westons Mills NJ
+USGS	01405400	Manalapan Brook at Spotswood NJ
+USGS	01405500	South River at Old Bridge NJ
+USGS	01406050	Deep Run at Old Bridge NJ
+USGS	01455500	Musconetcong River at outlet of Lake Hopatcong NJ
+USGS	01460500	Delaware and Raritan Canal at Kingston NJ
