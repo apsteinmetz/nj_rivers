@@ -268,9 +268,6 @@ download_usgs_stream_data <- function(station_ids, start_date, end_date) {
   return(final_df)
 }
 
-
-
-
 # main body --------------------------------------------------------------------
 sites_metadata <- sites$site_number |> 
   map(get_usgs_site_info) |> 
@@ -297,7 +294,10 @@ stream_data <- download_usgs_stream_data(
 
 stream_data <- stream_data |> 
   # remove columns with _flag suffix
-  select(-ends_with("_flag"))
+  select(-ends_with("_flag")) |> 
+  # add one second to datetimes at midnight
+  mutate(datetime = as_datetime(ifelse(hour(datetime) == 0 & minute(datetime) == 0 & second(datetime) == 0,
+                           datetime + seconds(1), datetime)),tz = "US/Eastern")
 
 # Display the results
 head(stream_data, 20)
