@@ -3,6 +3,7 @@ library(tidyverse)
 library(grid)
 library(lubridate)
 library(gganimate)
+library(cowplot)
 
 # load metadata
 #load river_data
@@ -49,18 +50,21 @@ stream_data_full <- stream_data |>
   as_tibble() 
 
 
-plot_gage_height <- function(basin = stream_data_full$basin_name[2], this_time = stream_data_full$datetime[100]) {
+plot_gage_height <- function(basin = stream_data_full$basin_name[2], this_time = stream_data_full$datetime[1000]) {
   stream_data_full |> 
     # filter by basin and time of day
     filter(datetime == this_time) |> 
     filter(basin_name == basin) |>
-    ggplot(aes(x = site_name, y = gage_height_ft)) +
+    ggplot(aes(x = site_name, y = gage_height_change)) +
     geom_col() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-    labs(title = paste("Gage Height -", basin),
+    labs(title = paste("Gage Height Change From Baseline-", basin),
          subtitle = this_time,
-         x = "Site Name",
-         y = "Gage Height (ft)")
+         x = "< - Upstream - Downstream ->",
+         y = "Gage Height (ft)") +
+    # ylim to max range of gage height change
+    ylim(0,max(stream_data_full$gage_height_change+1))
+    
 }
 
 
@@ -112,53 +116,79 @@ plot_gage_height_with_clock(basin = "Passaic River Basin", this_time = stream_da
 
 
 # create a grob with a circular analog 12-hour clock
-create_analog_clock_grob <- function(this_time_str = "2025-07-14 12:00:00") {
-  print(paste("Creating clock for time:", this_time_str))
+create_analog_clock <- function(this_time_str = "2025-07-14 01:00:00") {
   this_time <- as.POSIXct(this_time_str)
-  hour <- hour(this_time) %% 12
-  minute <- minute(this_time)
-  # Calculate angles for hour and minute hands
-  hour_angle <- -(hour + minute / 70) * (360 / 12)
-  minute_angle <- -minute * (360 / 60)
-  # Create a circular clock face
-  clock_face <- grid::circleGrob(r = unit(1, "npc") / 2, gp = grid::gpar(fill = "darkgrey", col = "black"))
-  hour_numbers <- lapply(1:12, function(i) {
-    i_inverse <- 13 - i # Invert the hour number for correct positioning
-    angle <- (i * 30) + 60 # Adjusting for 12 o'clock at the top
-    x <- 0.5 + 0.3 * cos(pi * angle / 180)
-    y <- 0.5 + 0.45 * sin(pi * angle / 180)
-    grid::textGrob(as.character(i_inverse), x = x, y = y, 
-                   gp = grid::gpar(fontsize = 30, fontface = "bold"))
-  })
-  # Create hour hand
-  hour_hand <- grid::linesGrob(
-    x = c(0.5, 0.5 + 0.2 * cos(pi * (hour_angle + 90) / 180)),
-    y = c(0.5, 0.5 + 0.2 * sin(pi * (hour_angle + 90) / 180)),
-    gp = grid::gpar(col = "white", lwd = 5)
-  )
+  hour <- lubridate::hour(this_time)
+  minute <- lubridate::minute(this_time)
+  i <- hour * 60 + minute + 1
   
-  # Create minute hand
-  minute_hand <- grid::linesGrob(
-    x = c(0.5, 0.5 + 0.25 * cos(pi * (minute_angle+90) / 180)),
-    y = c(0.5, 0.5 + 0.45 * sin(pi * (minute_angle+90) / 180)),
-    gp = grid::gpar(col = "red", lwd = 3)
-  )
+  hour.pos <- seq(0, 12, 12 / (12 * 60))[1:720]
+  min.pos <- seq(0, 12, 12 / 60)[1:60]
+  all.hours <- rep(hour.pos, 2)
+  all.times <- cbind(all.hours, min.pos, 24)
   
-  # Combine all elements into a single grob
-  grid::gTree(children = do.call(gList, c(list(clock_face), hour_numbers, list(hour_hand, minute_hand))))
+  cur.time <- data.frame(list(
+    times = c(all.times[i, 1], all.times[i, 2]),
+    hands = c(.5, 1),
+    hand_type = c("hour", "minute")
+  ))
+  
+  arrow_spec <- arrow(angle = 30, length = unit(0.25, "inches"),
+                      ends = "last", type = "open")
+  
+  ggplot(cur.time, aes(xmin = times, xmax = times + 0.1, ymin = 0, ymax = hands, fill = hand_type)) +
+    # geom_rect(alpha = 1) +
+    geom_segment(
+      aes(x = times, xend = times, y = 0, yend = hands),
+      size = 3, color = c("black","red"), alpha = 0.8,lineend = "round"
+    ) +
+    scale_fill_manual(values = c("hour" = "black", "minute" = "red")) +
+    # annotate with AM/PM text
+    annotate("text", x = 6, y = 0.5, label = ifelse(hour < 12, "AM", "PM"), size = 6, fontface = "bold") +
+    scale_x_continuous(
+      limits = c(0, all.hours[length(all.hours)]),
+      breaks = 0:11,
+      labels = c(12, 1:11)
+    ) +
+    scale_y_continuous(limits = c(0, 1.1)) +
+    theme_bw() +
+    coord_polar() +
+    theme(
+      legend.position = "none",
+      axis.text.x = element_text(size = 12, face = "bold"),
+      axis.text.y = element_blank(),
+      axis.title = element_blank(),
+      axis.ticks = element_blank(),
+      panel.grid.major = element_blank()
+    )
 }
+# test
+grid.newpage()
+clock_grob <- create_analog_clock("2025-07-14 13:00:01")
+
+clock_grob |> 
+  grid::grid.draw()
+
 
 # create a plot with an analog clock in the top right corner
-plot_gage_height_with_analog_clock <- function(basin = stream_data_full$basin_name[2], this_time = stream_data_full$datetime[2]) {
+plot_gage_height_with_analog_clock <- function(basin = stream_data_full$basin_name[2], this_time = stream_data_full$datetime[100]) {
   p <- plot_gage_height(basin, this_time)
   
   # create an analog clock
-  clock_grob <- create_analog_clock_grob(this_time)
-  
-  # add the clock to the plot
-  p + annotation_custom(clock_grob, xmin = 5, xmax = 9, ymin = 8, ymax = 12)
+  clock <- create_analog_clock(this_time)
+  clock_grob <- ggplotGrob(clock)
+  # add the clock to the plot, p, as an inset
+  p <- p + 
+    annotation_custom(
+      grob = clock_grob, 
+      xmin = 0, xmax =4, ymin = 8, ymax = 12
+    )
+p
 }
-plot_gage_height_with_analog_clock(basin = "Passaic River Basin", this_time = stream_data_full$datetime[200])
+gg <- plot_gage_height_with_analog_clock(basin = "Passaic River Basin", this_time = stream_data_full$datetime[1000])
+gg
+# save the plot with the analog clock
+ggsave("img/gage_height_with_analog_clock.png", plot = gg, width = 10, height = 8)
 
 
 # plot gage height over time for all sites in raritan basin
