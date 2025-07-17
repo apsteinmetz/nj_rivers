@@ -4,6 +4,7 @@ library(grid)
 library(lubridate)
 library(gganimate)
 library(cowplot)
+library(magick)
 
 # load metadata
 #load river_data
@@ -56,9 +57,14 @@ plot_gage_height <- function(basin = stream_data_full$basin_name[2], this_time =
     filter(datetime == this_time) |> 
     filter(basin_name == basin) |>
     ggplot(aes(x = site_name, y = gage_height_change)) +
-    geom_col() +
+    geom_col(fill = "navy") +
+    theme_minimal_hgrid(color = "black") +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-    labs(title = paste("Gage Height Change From Baseline-", basin),
+    # panel background color is dark green
+    theme(panel.background = element_rect(fill = "lightgreen", color = "black")) +
+    # plot background color is light green
+    theme(plot.background = element_rect(fill = "lightgrey", color = "black")) +
+    labs(title = paste(basin,"- Gage Height Change From Baseline"),
          subtitle = this_time,
          x = "< - Upstream - Downstream ->",
          y = "Gage Height (ft)") +
@@ -95,33 +101,16 @@ plot_gage_height_animation <- function(basin = stream_data_full$basin_name[2]) {
 plot_gage_height_animation(basin = "Passaic River Basin") |> 
   animate(nframes = length(unique(stream_data_full$datetime)), fps = 10, width = 800, height = 600)
 
-# create a grob that is a digital clock
-create_digital_clock <- function(time) {
-  time_str <- format(time, "%H:%M:%S")
-  grid::textGrob(time_str, gp = grid::gpar(fontsize = 20, fontface = "bold"), 
-                 just = "right", x = unit(1, "npc") - unit(0.05, "inches"), 
-                 y = unit(1, "npc") - unit(0.05, "inches"))
-}
-# create a plot with a digital clock in the top right corner
-plot_gage_height_with_clock <- function(basin = stream_data_full$basin_name[2], this_time = stream_data_full$datetime[2]) {
-  p <- plot_gage_height(basin, this_time)
-  
-  # create a digital clock
-  clock_grob <- create_digital_clock(this_time)
-  
-  # add the clock to the plot
-  p + annotation_custom(clock_grob, xmin = Inf, xmax = Inf, ymin = Inf, ymax = Inf)
-}
-plot_gage_height_with_clock(basin = "Passaic River Basin", this_time = stream_data_full$datetime[2])
-
 
 # create a grob with a circular analog 12-hour clock
 create_analog_clock <- function(this_time_str = "2025-07-14 01:00:00") {
   this_time <- as.POSIXct(this_time_str)
   hour <- lubridate::hour(this_time)
   minute <- lubridate::minute(this_time)
+  dow <- format(this_time,"%a")
   i <- hour * 60 + minute + 1
   
+  # one minute granularity
   hour.pos <- seq(0, 12, 12 / (12 * 60))[1:720]
   min.pos <- seq(0, 12, 12 / 60)[1:60]
   all.hours <- rep(hour.pos, 2)
@@ -129,27 +118,34 @@ create_analog_clock <- function(this_time_str = "2025-07-14 01:00:00") {
   
   cur.time <- data.frame(list(
     times = c(all.times[i, 1], all.times[i, 2]),
-    hands = c(.5, 1),
+    hands = c(1.2,1), # thickness of hand
     hand_type = c("hour", "minute")
   ))
-  
-  arrow_spec <- arrow(angle = 30, length = unit(0.25, "inches"),
-                      ends = "last", type = "open")
-  
-  ggplot(cur.time, aes(xmin = times, xmax = times + 0.1, ymin = 0, ymax = hands, fill = hand_type)) +
+  #arrow_spec <- arrow(angle = 30, length = unit(0.25, "inches"),
+  #                    ends = "last", type = "open")
+
+    ggplot(cur.time, aes(xmin = times, xmax = times + 0.1, ymin = 0, ymax = hands, fill = hand_type)) +
     # geom_rect(alpha = 1) +
+      # annotate with AM/PM text
+      annotate("text", x = 6, y = 0.5, 
+               label = paste0(dow," - ",ifelse(hour < 12, "AM", "PM")),
+               fontface = "bold", size = 3) +
+      scale_x_continuous(
+        limits = c(0, all.hours[length(all.hours)]),
+        breaks = 0:11,
+        labels = c(12, 1:11)
+      ) +
+      geom_segment(
+      data = filter(cur.time, hand_type == "hour"),
+      aes(x = times, xend = times, y = 0, yend = .9),size = 2,
+      color = "darkgrey", alpha = .8, lineend = "round"
+    ) +
     geom_segment(
-      aes(x = times, xend = times, y = 0, yend = hands),
-      size = 3, color = c("black","red"), alpha = 0.8,lineend = "round"
+      data = filter(cur.time, hand_type == "minute"),
+      aes(x = times, xend = times, y = 0, yend = 1),size = 1,
+      color = "red", alpha = 0.6, lineend = "round"
     ) +
     scale_fill_manual(values = c("hour" = "black", "minute" = "red")) +
-    # annotate with AM/PM text
-    annotate("text", x = 6, y = 0.5, label = ifelse(hour < 12, "AM", "PM"), size = 6, fontface = "bold") +
-    scale_x_continuous(
-      limits = c(0, all.hours[length(all.hours)]),
-      breaks = 0:11,
-      labels = c(12, 1:11)
-    ) +
     scale_y_continuous(limits = c(0, 1.1)) +
     theme_bw() +
     coord_polar() +
@@ -164,7 +160,7 @@ create_analog_clock <- function(this_time_str = "2025-07-14 01:00:00") {
 }
 # test
 grid.newpage()
-clock_grob <- create_analog_clock("2025-07-14 13:00:01")
+clock_grob <- create_analog_clock("2025-07-14 12:00")
 
 clock_grob |> 
   grid::grid.draw()
@@ -185,12 +181,31 @@ plot_gage_height_with_analog_clock <- function(basin = stream_data_full$basin_na
     )
 p
 }
-gg <- plot_gage_height_with_analog_clock(basin = "Passaic River Basin", this_time = stream_data_full$datetime[1000])
+
+gg <- plot_gage_height_with_analog_clock()
 gg
-# save the plot with the analog clock
-ggsave("img/gage_height_with_analog_clock.png", plot = gg, width = 10, height = 8)
+ggsave(plot_gage_height_with_analog_clock(), filename = "img/aa_test.png", width = 10, height = 8)
 
-
+save_gage_height_plot <- function(basin = stream_data_full$basin_name[2], this_time = stream_data_full$datetime[100]) {
+  gg <- plot_gage_height(basin, this_time)
+  
+  # create an analog clock
+  clock <- create_analog_clock(this_time)
+  clock_grob <- ggplotGrob(clock)
+  # add the clock to the plot, p, as an inset
+  gg <- gg+ 
+    annotation_custom(
+      grob = clock_grob, 
+      xmin = 0, xmax =4, ymin = 8, ymax = 12
+    )
+  # compute the number of minutes between this_time and the first time in the dataset
+  time_diff <- sprintf("%04d", as.numeric(difftime(this_time, min(stream_data_full$datetime), units = "mins")))
+  
+  # save gg with the filename pattern "img/gage_height_change_<basin>_<time>.png"
+  filename <- paste0("img/gage_height_change_",time_diff, "_",basin,".png")
+  ggsave(filename, plot = gg, width = 10, height = 8)
+  cat("Saved plot to", filename, "\n")
+  }
 # plot gage height over time for all sites in raritan basin
 plot_gage_height_over_time <- function(basin = stream_data_full$basin_name[2]) {
   stream_data_full |> 
@@ -202,4 +217,39 @@ plot_gage_height_over_time <- function(basin = stream_data_full$basin_name[2]) {
          y = "Gage Height Change(ft)") +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 }
-plot_gage_height_over_time("Rahway River Basin")
+plot_gage_height_over_time("Raritan River Basin")
+
+# combine files into a gif
+combine_gage_height_plots <- function(basin = BASIN) {
+  fps <- 5
+  # get all files in img directory that match the pattern
+  files <- list.files("img", pattern = paste0("gage_height_change_.*_", basin, ".png"), full.names = TRUE)
+  
+  # read the images
+  cat("reading ",basin," images from", length(files), "files...\n")
+  images <- image_read(files)
+  
+  # combine into a gif
+  cat("combining images into gif...\n")
+  gif <- image_animate(images, fps = fps)
+  
+  # save the gif
+  cat("saving gif...\n")
+  image_write(gif, paste0("img/gage_height_change_", basin, ".gif"))
+  
+  cat("Saved GIF to img/gage_height_change_", basin, ".gif\n")
+}
+
+basins <- levels(stream_data_full$basin_name)
+times <- stream_data_full |> 
+  pull(datetime) |> 
+  unique()
+
+# subset for test
+# times <- times[20:25]
+
+expand_grid(basin = basins, time = times) |> 
+  pmap(\(basin, time) save_gage_height_plot(basin = basin, this_time = time))
+
+basins |> 
+  map(combine_gage_height_plots)
