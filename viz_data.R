@@ -98,8 +98,8 @@ plot_gage_height_animation <- function(basin = stream_data_full$basin_name[2]) {
     ease_aes('linear')
 }
 
-plot_gage_height_animation(basin = "Passaic River Basin") |> 
-  animate(nframes = length(unique(stream_data_full$datetime)), fps = 10, width = 800, height = 600)
+#plot_gage_height_animation(basin = "Passaic River Basin") |> 
+#  animate(nframes = length(unique(stream_data_full$datetime)), fps = 10, width = 800, height = 600)
 
 
 # create a grob with a circular analog 12-hour clock
@@ -137,12 +137,12 @@ create_analog_clock <- function(this_time_str = "2025-07-14 01:00:00") {
       ) +
       geom_segment(
       data = filter(cur.time, hand_type == "hour"),
-      aes(x = times, xend = times, y = 0, yend = .9),size = 2,
+      aes(x = times, xend = times, y = 0, yend = .9),linewidth = 2,
       color = "darkgrey", alpha = .8, lineend = "round"
     ) +
     geom_segment(
       data = filter(cur.time, hand_type == "minute"),
-      aes(x = times, xend = times, y = 0, yend = 1),size = 1,
+      aes(x = times, xend = times, y = 0, yend = 1),linewidth = 1,
       color = "red", alpha = 0.6, lineend = "round"
     ) +
     scale_fill_manual(values = c("hour" = "black", "minute" = "red")) +
@@ -184,28 +184,8 @@ p
 
 gg <- plot_gage_height_with_analog_clock()
 gg
-ggsave(plot_gage_height_with_analog_clock(), filename = "img/aa_test.png", width = 10, height = 8)
+# ggsave(plot_gage_height_with_analog_clock(), filename = "img/aa_test.png", width = 10, height = 8)
 
-save_gage_height_plot <- function(basin = stream_data_full$basin_name[2], this_time = stream_data_full$datetime[100]) {
-  gg <- plot_gage_height(basin, this_time)
-  
-  # create an analog clock
-  clock <- create_analog_clock(this_time)
-  clock_grob <- ggplotGrob(clock)
-  # add the clock to the plot, p, as an inset
-  gg <- gg+ 
-    annotation_custom(
-      grob = clock_grob, 
-      xmin = 0, xmax =4, ymin = 8, ymax = 12
-    )
-  # compute the number of minutes between this_time and the first time in the dataset
-  time_diff <- sprintf("%04d", as.numeric(difftime(this_time, min(stream_data_full$datetime), units = "mins")))
-  
-  # save gg with the filename pattern "img/gage_height_change_<basin>_<time>.png"
-  filename <- paste0("img/gage_height_change_",time_diff, "_",basin,".png")
-  ggsave(filename, plot = gg, width = 10, height = 8)
-  cat("Saved plot to", filename, "\n")
-  }
 # plot gage height over time for all sites in raritan basin
 plot_gage_height_over_time <- function(basin = stream_data_full$basin_name[2]) {
   stream_data_full |> 
@@ -219,11 +199,45 @@ plot_gage_height_over_time <- function(basin = stream_data_full$basin_name[2]) {
 }
 plot_gage_height_over_time("Raritan River Basin")
 
+reduce_image_size <- function(fname, scale = 0.5) {
+  img <- image_read(fname)
+  img <- image_scale(img, paste0(scale * 100, "%"))
+  image_write(img, fname)
+}
+
+save_gage_height_plot <- function(basin = stream_data_full$basin_name[2], this_time = stream_data_full$datetime[100]) {
+  gg <- plot_gage_height(basin, this_time)
+  
+  # create an analog clock
+  clock <- create_analog_clock(this_time)
+  clock_grob <- ggplotGrob(clock)
+  # add the clock to the plot, p, as an inset
+  gg <- gg+ 
+    annotation_custom(
+      grob = clock_grob, 
+      xmin = 0, xmax =4, ymin = 8, ymax = 12
+    )
+  
+  # compute the number of minutes between this_time and the first time in the dataset
+  time_diff <- sprintf("%04d", as.numeric(difftime(this_time, min(stream_data_full$datetime), units = "mins")))
+  
+  # save gg with the filename pattern "img/gage_height_change_<basin>_<time>.png"
+  filename <- paste0("img/gage_height_change_",basin,"_",time_diff,".png")
+  print(filename)
+  # save the plot as filename
+ ggsave(gg, filename = filename, width = 10, height = 8)
+ reduce_image_size(filename)
+ 
+}
+
+
+# load fname an reduce pixel size by 50%, then resave
+
 # combine files into a gif
 combine_gage_height_plots <- function(basin = BASIN) {
   fps <- 5
   # get all files in img directory that match the pattern
-  files <- list.files("img", pattern = paste0("gage_height_change_.*_", basin, ".png"), full.names = TRUE)
+  files <- list.files("img", pattern = paste0("gage_height_change_", basin,".*.png"), full.names = TRUE)
   
   # read the images
   cat("reading ",basin," images from", length(files), "files...\n")
@@ -235,7 +249,7 @@ combine_gage_height_plots <- function(basin = BASIN) {
   
   # save the gif
   cat("saving gif...\n")
-  image_write(gif, paste0("img/gage_height_change_", basin, ".gif"))
+  image_write(gif, paste0("gif/gage_height_change_", basin, ".gif"))
   
   cat("Saved GIF to img/gage_height_change_", basin, ".gif\n")
 }
@@ -251,5 +265,8 @@ times <- stream_data_full |>
 expand_grid(basin = basins, time = times) |> 
   pmap(\(basin, time) save_gage_height_plot(basin = basin, this_time = time))
 
+# on my ubuntu system this runs out of memory 
 basins |> 
   map(combine_gage_height_plots)
+# so I do it externally
+# convert img/gage_height_change_Passaic* gif/passaic.gif
