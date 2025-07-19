@@ -256,8 +256,14 @@ combine_gage_height_plots <- function(basin = BASIN) {
 
 basins <- levels(stream_data_full$basin_name)
 times <- stream_data_full |> 
+  filter(datetime >= as.POSIXct("2025-07-14 16:00:00")) |>
+  filter(datetime <= as.POSIXct("2025-07-15 08:00:00")) |> 
   pull(datetime) |> 
   unique()
+  # filter after 2025-07-14 16:00:00
+  # and before 2025-07-15 08:00:00
+
+# limit times to between 4pm on the first day and 8 am on the second
 
 # subset for test
 # times <- times[20:25]
@@ -265,8 +271,22 @@ times <- stream_data_full |>
 expand_grid(basin = basins, time = times) |> 
   pmap(\(basin, time) save_gage_height_plot(basin = basin, this_time = time))
 
-# on my ubuntu system this runs out of memory 
 basins |> 
   map(combine_gage_height_plots)
-# so I do it externally
-# convert img/gage_height_change_Passaic* gif/passaic.gif
+# convert to mp4 externally.  This let's you pause the anim
+# ffmpeg -i animated.gif -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" video.mp4
+# use ggmap to create a map of the basins
+
+library(ggmap)
+# get basemap
+basemap <- get_stadiamap(bbox = c(-75.5, 39.5, -73.5, 41), zoom = 8, maptype = "stadia_terrain")
+# plot basemap with basin polygons
+ggmap(basemap) +
+  geom_polygon(data = sites_metadata, aes(x = longitude, y = latitude, group = basin_name, fill = basin_name), alpha = 0.5) +
+  geom_text(data = sites_metadata, aes(x = longitude, y = latitude, label = site_name), size = 3, hjust = -0.1) +
+  labs(title = "NJ River Basins",
+       x = "Longitude",
+       y = "Latitude") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
