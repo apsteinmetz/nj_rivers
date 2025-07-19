@@ -2,9 +2,11 @@
 library(tidyverse)
 library(grid)
 library(lubridate)
-library(gganimate)
+# library(gganimate)
 library(cowplot)
 library(magick)
+library(ggmap)
+library(ggforce)
 
 # load metadata
 #load river_data
@@ -277,16 +279,140 @@ basins |>
 # ffmpeg -i animated.gif -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" video.mp4
 # use ggmap to create a map of the basins
 
-library(ggmap)
+
+# function to return bbox from extent of sites_metadata as a parameter
+get_bbox_from_metadata <- function(metadata = sites_metadata) {
+  bbox <- c(
+    min(metadata$longitude, na.rm = TRUE),
+    min(metadata$latitude, na.rm = TRUE),
+    max(metadata$longitude, na.rm = TRUE),
+    max(metadata$latitude, na.rm = TRUE)
+  )
+  return(bbox)
+}
+
+# function to locate a smaller box in bbox with with a certain percentage size and a text quadrant parameter with "topright" as the default
+get_inset_loc <- function(bbox, size = 0.2, quadrant = "topleft") {
+  width <- (bbox[3] - bbox[1]) * size
+  height <- (bbox[4] - bbox[2]) * size
+  
+  if (quadrant == "topright") {
+    return(c(bbox[3] - width, bbox[4] - height, bbox[3], bbox[4]))
+  } else if (quadrant == "topleft") {
+    return(c(bbox[1], bbox[4] - height, bbox[1] + width, bbox[4]))
+  } else if (quadrant == "bottomright") {
+    return(c(bbox[3] - width, bbox[2], bbox[3], bbox[2] + height))
+  } else if (quadrant == "bottomleft") {
+    return(c(bbox[1], bbox[2], bbox[1] + width, bbox[2] + height))
+  } else {
+    stop("Invalid quadrant specified. Use 'topright', 'topleft', 'bottomright', or 'bottomleft'.")
+  }
+}
+
+# function to compute the geographic center of each basin
+get_basin_centers <- function(metadata) {
+  metadata |> 
+    group_by(basin_name) |> 
+    summarise(
+      longitude = mean(longitude, na.rm = TRUE),
+      latitude = mean(latitude, na.rm = TRUE)
+    ) |> 
+    # mutate basin name to remove "river" and put a new line before Basin
+    mutate(basin_name = str_replace_all(basin_name, " River ", "\n"))
+}
+# get basin centers
+get_basin_centers(sites_metadata)
+
 # get basemap
-basemap <- get_stadiamap(bbox = c(-75.5, 39.5, -73.5, 41), zoom = 8, maptype = "stadia_terrain")
+bbox <- get_bbox_from_metadata(sites_metadata)
+inset_loc <- bbox |>  get_inset_loc()
+
+#basemap <- get_stadiamap(bbox = bbox,
+#                         zoom = 10, maptype = "stamen_terrain_background")
+basemap <- get_stadiamap(bbox = bbox,
+                         zoom = 10, maptype = "stamen_toner")
 # plot basemap with basin polygons
-ggmap(basemap) +
-  geom_polygon(data = sites_metadata, aes(x = longitude, y = latitude, group = basin_name, fill = basin_name), alpha = 0.5) +
-  geom_text(data = sites_metadata, aes(x = longitude, y = latitude, label = site_name), size = 3, hjust = -0.1) +
-  labs(title = "NJ River Basins",
-       x = "Longitude",
-       y = "Latitude") +
-  theme_minimal() +
-  theme(legend.position = "none")
+
+grid.newpage()
+
+map_gage_height <- function(this_time = stream_data_full$datetime[100]) {
+  gg <- ggmap(basemap) +
+    # add a hull around the basin locations
+    # annotate with basin name at basin center
+    ggforce::geom_mark_hull(
+      data = sites_metadata,
+      aes(x = longitude, y = latitude, group = basin_name, fill = basin_name),
+      concavity = 1,
+      expand = unit(.3, "cm"),
+      alpha = 0.3
+    ) +
+    geom_text(
+      data = get_basin_centers(sites_metadata),
+      aes(x = longitude, y = latitude, label = basin_name),
+      size = 5,
+      hjust = -0.1
+    ) +
+    # geom_text(data = sites_metadata, aes(x = longitude, y = latitude, label = site_name), size = 3, hjust = -0.1) +
+    labs(title = "NJ River Basins") +
+    theme_minimal() +
+    theme(legend.position = "none",
+          # remove axis text and ticks
+          axis.text = element_blank(),
+          axis.ticks = element_blank())
+  # add a layer for the gage height change for a specific time
+  gg +
+    geom_point(
+      data = stream_data_full |> filter(datetime == this_time),
+      aes(
+        x = longitude,
+        y = latitude,
+        size = gage_height_change,
+        color = basin_name
+      ),
+      alpha = .8
+    ) +
+    scale_size_continuous(range = c(1, 10)) +
+    labs(size = "Gage Height Change (ft)", color = "Basin Name") +
+    # theme(legend.position = "none") +
+    ##  add a clock in the top right corner
+     coord_cartesian() +
+     annotation_custom(
+      grob = ggplotGrob(create_analog_clock(this_time)),
+    # locate grob according to inset_loc
+      xmin = inset_loc[1], xmax = inset_loc[3], ymin = inset_loc[2], ymax = inset_loc[4]
+    ) + 
+    # switch back to map projection after annotation
+    coord_sf() +
+    theme(legend.position = "none",
+          # remove axis text and ticks
+          axis.text = element_blank(),
+          axis.ticks = element_blank())
+          
+  
+}
+# test the map_gage_height function
+map_gage_height(this_time = stream_data_full$datetime[1000]) +
+  ggtitle("NJ River Basins - Gage Height Change at 2025-07-14 12:00:00")
+
+# create a leaflet map of metadata sites
+library(leaflet)
+r
+library(leaflet)
+
+# Create color palette for basins
+pal <- colorFactor(palette = "Set1", domain = sites_metadata$basin_name)
+
+leaflet(sites_metadata) |> 
+  addTiles() |> 
+  addCircleMarkers(
+    lng = ~longitude, lat = ~latitude,
+    radius = ~altitude / 100,
+    color = ~pal(basin_name), fillOpacity = 0.5,
+    popup = ~paste0("<strong>Site Name:</strong> ", site_name, "<br>",
+                    "<strong>Basin:</strong> ", basin_name, "<br>",
+                    "<strong>Altitude:</strong> ", altitude, " ft")
+  ) |> 
+  addLegend("bottomright", pal = pal, values = ~basin_name,
+            title = "Basin", opacity = 1)
+
 
