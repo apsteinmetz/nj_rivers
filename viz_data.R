@@ -160,14 +160,14 @@ create_analog_clock <- function(this_time_str = "2025-07-14 01:00:00") {
       panel.grid.major = element_blank()
     )
 }
-# test
-grid.newpage()
-clock_grob <- create_analog_clock("2025-07-14 12:00")
-
-clock_grob |> 
-  grid::grid.draw()
-
-
+# # test
+# grid.newpage()
+# clock_grob <- create_analog_clock("2025-07-14 12:00")
+# 
+# clock_grob |> 
+#   grid::grid.draw()
+# 
+# 
 # create a plot with an analog clock in the top right corner
 plot_gage_height_with_analog_clock <- function(basin = stream_data_full$basin_name[2], this_time = stream_data_full$datetime[100]) {
   p <- plot_gage_height(basin, this_time)
@@ -184,8 +184,8 @@ plot_gage_height_with_analog_clock <- function(basin = stream_data_full$basin_na
 p
 }
 
-gg <- plot_gage_height_with_analog_clock()
-gg
+# gg <- plot_gage_height_with_analog_clock()
+# gg
 # ggsave(plot_gage_height_with_analog_clock(), filename = "img/aa_test.png", width = 10, height = 8)
 
 # plot gage height over time for all sites in raritan basin
@@ -199,7 +199,7 @@ plot_gage_height_over_time <- function(basin = stream_data_full$basin_name[2]) {
          y = "Gage Height Change(ft)") +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 }
-plot_gage_height_over_time("Raritan River Basin")
+# plot_gage_height_over_time("Raritan River Basin")
 
 reduce_image_size <- function(fname, scale = 0.5) {
   img <- image_read(fname)
@@ -270,11 +270,12 @@ times <- stream_data_full |>
 # subset for test
 # times <- times[20:25]
 
-expand_grid(basin = basins, time = times) |> 
-  pmap(\(basin, time) save_gage_height_plot(basin = basin, this_time = time))
+# expand_grid(basin = basins, time = times) |> 
+#  pmap(\(basin, time) save_gage_height_plot(basin = basin, this_time = time))
 
-basins |> 
-  map(combine_gage_height_plots)
+#basins |> 
+#  map(combine_gage_height_plots)
+
 # convert to mp4 externally.  This let's you pause the anim
 # ffmpeg -i animated.gif -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" video.mp4
 # use ggmap to create a map of the basins
@@ -320,47 +321,21 @@ get_basin_centers <- function(metadata) {
     # mutate basin name to remove "river" and put a new line before Basin
     mutate(basin_name = str_replace_all(basin_name, " River ", "\n"))
 }
-# get basin centers
-get_basin_centers(sites_metadata)
 
 # get basemap
 bbox <- get_bbox_from_metadata(sites_metadata)
 inset_loc <- bbox |>  get_inset_loc()
 
-#basemap <- get_stadiamap(bbox = bbox,
-#                         zoom = 10, maptype = "stamen_terrain_background")
 basemap <- get_stadiamap(bbox = bbox,
-                         zoom = 10, maptype = "stamen_toner")
+                         zoom = 10, maptype = "stamen_terrain")
+#basemap <- get_stadiamap(bbox = bbox,
+#                         zoom = 10, maptype = "stamen_toner")
 # plot basemap with basin polygons
 
-grid.newpage()
 
-map_gage_height <- function(this_time = stream_data_full$datetime[100]) {
+map_gage_height <- function(this_time = stream_data_full$datetime[1]) {
   gg <- ggmap(basemap) +
-    # add a hull around the basin locations
-    # annotate with basin name at basin center
-    ggforce::geom_mark_hull(
-      data = sites_metadata,
-      aes(x = longitude, y = latitude, group = basin_name, fill = basin_name),
-      concavity = 1,
-      expand = unit(.3, "cm"),
-      alpha = 0.3
-    ) +
-    geom_text(
-      data = get_basin_centers(sites_metadata),
-      aes(x = longitude, y = latitude, label = basin_name),
-      size = 5,
-      hjust = -0.1
-    ) +
-    # geom_text(data = sites_metadata, aes(x = longitude, y = latitude, label = site_name), size = 3, hjust = -0.1) +
-    labs(title = "NJ River Basins") +
-    theme_minimal() +
-    theme(legend.position = "none",
-          # remove axis text and ticks
-          axis.text = element_blank(),
-          axis.ticks = element_blank())
-  # add a layer for the gage height change for a specific time
-  gg +
+    coord_cartesian() +
     geom_point(
       data = stream_data_full |> filter(datetime == this_time),
       aes(
@@ -369,34 +344,76 @@ map_gage_height <- function(this_time = stream_data_full$datetime[100]) {
         size = gage_height_change,
         color = basin_name
       ),
-      alpha = .8
+      alpha = .9
     ) +
-    scale_size_continuous(range = c(1, 10)) +
-    labs(size = "Gage Height Change (ft)", color = "Basin Name") +
-    # theme(legend.position = "none") +
-    ##  add a clock in the top right corner
-     coord_cartesian() +
-     annotation_custom(
-      grob = ggplotGrob(create_analog_clock(this_time)),
-    # locate grob according to inset_loc
-      xmin = inset_loc[1], xmax = inset_loc[3], ymin = inset_loc[2], ymax = inset_loc[4]
-    ) + 
-    # switch back to map projection after annotation
-    coord_sf() +
+    scale_size_continuous(range = c(1, 25), limits = c(0, max(stream_data_full$gage_height_change))) + 
+    ggforce::geom_mark_hull(
+      data = sites_metadata,
+      aes(x = longitude, y = latitude, group = basin_name, fill = basin_name),
+      concavity = 2,
+      expand = unit(.3, "cm"),
+      alpha = 0.1
+    ) +
+    geom_text(
+      data = get_basin_centers(sites_metadata),
+      aes(x = longitude, y = latitude, label = basin_name),
+      size = 5,
+      hjust = -0.1
+    ) +
+    theme_minimal() +
     theme(legend.position = "none",
-          # remove axis text and ticks
           axis.text = element_blank(),
           axis.ticks = element_blank())
-          
-  
+  gg + coord_sf()
 }
-# test the map_gage_height function
-map_gage_height(this_time = stream_data_full$datetime[1000]) +
-  ggtitle("NJ River Basins - Gage Height Change at 2025-07-14 12:00:00")
+
+map_gage_height(this_time = times[1])
+
+# save the map with gage height change for a specific time
+save_map_gage_height <- function(this_time = stream_data_full$datetime[1000]) {
+  cat("Saving...\n")
+  gg <- map_gage_height(this_time) + ggtitle(paste("Gage Height Change at", this_time),
+                                             subtitle = "Northern NJ River Basins")
+  
+  # compute the number of minutes between this_time and the first time in the dataset
+  time_diff <- sprintf("%04d", as.numeric(difftime(this_time, min(times), units = "mins")))
+  
+  # save gg with the filename pattern "img/map_gage_height_change_<time>.png"
+  filename <- paste0("img/map_gage_height_change_", time_diff, ".png")
+  print(filename)
+  # save the plot as filename
+  cat("Saving...\n")
+  ggsave(gg, filename = filename, width = 10, height = 8)
+  cat("Reducing File Size...\n")
+  reduce_image_size(filename)
+}
+
+walk(times,save_map_gage_height)
+
+# combine files into a gif
+combine_gage_height_maps <- function() {
+  fps <- 5
+  # get all files in img directory that match the pattern
+  files <- list.files("img", pattern = ("map.*.png"), full.names = TRUE)
+  
+  # read the images
+  cat("reading ", length(files), "files...\n")
+  images <- image_read(files)
+  
+  # combine into a gif
+  cat("combining images into gif...\n")
+  gif <- image_animate(images, fps = fps)
+  
+  # save the gif
+  cat("saving gif...\n")
+  image_write(gif, paste0("gif/gage_height_map.gif"))
+  
+  cat("Saved GIF to img/gage_height_map.gif\n")
+}
+
+# combine
 
 # create a leaflet map of metadata sites
-library(leaflet)
-r
 library(leaflet)
 
 # Create color palette for basins
