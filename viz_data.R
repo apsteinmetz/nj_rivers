@@ -478,6 +478,13 @@ combine_gage_height_maps <- function() {
 # combine
 combine_gage_height_maps()
 
+  
+# convert gif to mp4 using external ffmpeg
+system("ffmpeg -i gif/gage_height_map.gif -movflags faststart -pix_fmt yuv420p -vf scale=1280:-1 gif/gage_height_map.mp4")
+
+
+
+
 # create a leaflet map of metadata sites
 library(leaflet)
 
