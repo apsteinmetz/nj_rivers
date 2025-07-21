@@ -1,0 +1,1 @@
+I continue to explore visualizing flooding with #rstats, #ggplot with stream gage data from the USGS.  Here are the USGS stream gage data for the flooding in NJ on 7/14. You'll note that "Bound Brook in Middelsex" is the station downstream from Plainfield, where the worst flooding occured.

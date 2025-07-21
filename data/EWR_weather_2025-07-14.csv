@@ -1,0 +1,69 @@
+datetime,temperature,temperature_unit,dew_point,dew_point_unit,humidity,humidity_unit,wind,wind_speed,wind_speed_unit,wind_gust,wind_gust_unit,pressure,pressure_unit,precip,precip_unit,condition,tz
+2025-07-14T05:51:00Z,78, °F,72, °F,81, %,S,7, mph,0, mph,30.04, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-14T06:51:00Z,78, °F,72, °F,81, %,S,7, mph,0, mph,30.04, in,0, in,Cloudy,US/Eastern
+2025-07-14T07:51:00Z,78, °F,71, °F,79, %,S,6, mph,0, mph,30.03, in,0, in,Cloudy,US/Eastern
+2025-07-14T08:51:00Z,78, °F,72, °F,81, %,S,5, mph,0, mph,30.03, in,0, in,Cloudy,US/Eastern
+2025-07-14T09:22:00Z,78, °F,72, °F,81, %,S,6, mph,0, mph,30.03, in,0, in,Cloudy,US/Eastern
+2025-07-14T09:46:00Z,79, °F,72, °F,78, %,S,7, mph,0, mph,30.03, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-14T09:51:00Z,78, °F,72, °F,81, %,SSW,6, mph,0, mph,30.03, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-14T10:16:00Z,78, °F,72, °F,81, %,S,5, mph,0, mph,30.04, in,0, in,Cloudy,US/Eastern
+2025-07-14T10:51:00Z,78, °F,72, °F,81, %,SSW,6, mph,0, mph,30.03, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-14T11:35:00Z,79, °F,71, °F,77, %,S,6, mph,0, mph,30.04, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-14T11:51:00Z,79, °F,71, °F,77, %,S,6, mph,0, mph,30.04, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-14T12:16:00Z,81, °F,71, °F,72, %,SSW,5, mph,0, mph,30.04, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-14T12:51:00Z,83, °F,71, °F,67, %,S,7, mph,0, mph,30.04, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-14T13:07:00Z,84, °F,70, °F,63, %,S,9, mph,0, mph,30.04, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-14T13:51:00Z,84, °F,70, °F,63, %,WSW,5, mph,0, mph,30.04, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-14T14:51:00Z,84, °F,69, °F,61, %,S,3, mph,0, mph,30.04, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-14T15:27:00Z,86, °F,70, °F,59, %,SSW,8, mph,0, mph,30.03, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-14T15:51:00Z,86, °F,70, °F,59, %,S,9, mph,0, mph,30.03, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-14T16:51:00Z,88, °F,71, °F,57, %,VAR,7, mph,0, mph,30.01, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-14T17:51:00Z,87, °F,72, °F,61, %,SE,10, mph,0, mph,30, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-14T18:51:00Z,88, °F,72, °F,59, %,SE,9, mph,0, mph,29.98, in,0, in,Light Rain,US/Eastern
+2025-07-14T19:51:00Z,83, °F,74, °F,74, %,S,10, mph,0, mph,29.97, in,0, in,Rain,US/Eastern
+2025-07-14T20:12:00Z,82, °F,75, °F,79, %,SSE,9, mph,18, mph,29.97, in,0.1, in,Heavy T-Storm,US/Eastern
+2025-07-14T20:41:00Z,79, °F,75, °F,88, %,SSE,13, mph,22, mph,29.97, in,0.4, in,Heavy T-Storm,US/Eastern
+2025-07-14T20:51:00Z,79, °F,74, °F,84, %,SSE,9, mph,0, mph,29.97, in,0.6, in,Heavy T-Storm,US/Eastern
+2025-07-14T21:06:00Z,79, °F,75, °F,88, %,CALM,0, mph,0, mph,29.98, in,0.1, in,T-Storm,US/Eastern
+2025-07-14T21:51:00Z,77, °F,73, °F,88, %,NW,13, mph,0, mph,30, in,0.3, in,Heavy T-Storm,US/Eastern
+2025-07-14T22:40:00Z,76, °F,72, °F,87, %,W,25, mph,36, mph,30.03, in,0.4, in,Heavy T-Storm / Windy,US/Eastern
+2025-07-14T22:46:00Z,73, °F,70, °F,88, %,WNW,24, mph,37, mph,30.02, in,0.6, in,Heavy T-Storm / Windy,US/Eastern
+2025-07-14T22:51:00Z,73, °F,70, °F,90, %,W,23, mph,32, mph,30.03, in,0.7, in,Heavy T-Storm / Windy,US/Eastern
+2025-07-14T23:18:00Z,74, °F,69, °F,85, %,NW,15, mph,0, mph,30.03, in,0.3, in,T-Storm,US/Eastern
+2025-07-14T23:42:00Z,75, °F,71, °F,87, %,NNW,9, mph,0, mph,30.04, in,0.3, in,T-Storm,US/Eastern
+2025-07-14T23:51:00Z,75, °F,71, °F,87, %,N,10, mph,0, mph,30.03, in,0.3, in,T-Storm,US/Eastern
+2025-07-15T00:19:00Z,74, °F,71, °F,91, %,N,9, mph,0, mph,30.03, in,0.1, in,Rain,US/Eastern
+2025-07-15T00:51:00Z,74, °F,71, °F,91, %,NNE,6, mph,0, mph,30.03, in,0.1, in,Rain,US/Eastern
+2025-07-15T01:51:00Z,74, °F,71, °F,91, %,NE,3, mph,0, mph,30.04, in,0, in,Light Rain,US/Eastern
+2025-07-15T02:35:00Z,75, °F,71, °F,87, %,CALM,0, mph,0, mph,30.04, in,0, in,Light Rain,US/Eastern
+2025-07-15T02:51:00Z,75, °F,71, °F,87, %,E,3, mph,0, mph,30.03, in,0, in,Light Rain,US/Eastern
+2025-07-15T03:51:00Z,76, °F,72, °F,87, %,SSE,3, mph,0, mph,30.02, in,0, in,Cloudy,US/Eastern
+2025-07-15T04:51:00Z,74, °F,71, °F,91, %,S,6, mph,0, mph,30.04, in,0, in,Cloudy,US/Eastern
+2025-07-15T05:51:00Z,75, °F,70, °F,84, %,W,5, mph,0, mph,30.03, in,0, in,Cloudy,US/Eastern
+2025-07-15T06:51:00Z,75, °F,70, °F,84, %,CALM,0, mph,0, mph,30.03, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-15T07:51:00Z,75, °F,71, °F,87, %,NNW,6, mph,0, mph,30.03, in,0, in,Cloudy,US/Eastern
+2025-07-15T08:51:00Z,75, °F,70, °F,84, %,N,5, mph,0, mph,30.04, in,0, in,Cloudy,US/Eastern
+2025-07-15T09:31:00Z,75, °F,71, °F,87, %,N,6, mph,0, mph,30.04, in,0, in,Cloudy,US/Eastern
+2025-07-15T09:51:00Z,75, °F,71, °F,87, %,NNE,8, mph,0, mph,30.04, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-15T10:30:00Z,75, °F,70, °F,84, %,NNE,6, mph,0, mph,30.05, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-15T10:51:00Z,75, °F,71, °F,87, %,NNE,6, mph,0, mph,30.05, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-15T11:21:00Z,76, °F,71, °F,85, %,NNE,6, mph,0, mph,30.05, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-15T11:51:00Z,77, °F,71, °F,82, %,NNE,6, mph,0, mph,30.05, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-15T12:51:00Z,80, °F,71, °F,74, %,NNE,6, mph,0, mph,30.06, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-15T12:56:00Z,80, °F,71, °F,74, %,NNE,7, mph,0, mph,30.06, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-15T13:51:00Z,81, °F,70, °F,69, %,NNE,5, mph,0, mph,30.06, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-15T14:51:00Z,82, °F,70, °F,67, %,NNE,5, mph,0, mph,30.06, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-15T15:51:00Z,83, °F,70, °F,65, %,VAR,3, mph,0, mph,30.05, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-15T16:51:00Z,84, °F,70, °F,63, %,SSE,6, mph,0, mph,30.04, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-15T17:36:00Z,85, °F,71, °F,63, %,CALM,0, mph,0, mph,30.04, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-15T17:51:00Z,85, °F,71, °F,63, %,WSW,8, mph,0, mph,30.03, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-15T18:51:00Z,89, °F,72, °F,57, %,ESE,6, mph,0, mph,30.02, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-15T19:51:00Z,89, °F,70, °F,53, %,SSW,7, mph,0, mph,30.01, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-15T20:51:00Z,89, °F,72, °F,57, %,S,9, mph,0, mph,30, in,0, in,Mostly Cloudy,US/Eastern
+2025-07-15T21:51:00Z,86, °F,72, °F,63, %,SSE,10, mph,0, mph,30, in,0, in,Partly Cloudy,US/Eastern
+2025-07-15T22:51:00Z,85, °F,72, °F,65, %,SSE,8, mph,0, mph,30.01, in,0, in,Partly Cloudy,US/Eastern
+2025-07-15T23:51:00Z,84, °F,73, °F,69, %,SE,7, mph,0, mph,30.02, in,0, in,Partly Cloudy,US/Eastern
+2025-07-16T00:51:00Z,83, °F,74, °F,74, %,SSE,7, mph,0, mph,30.02, in,0, in,Fair,US/Eastern
+2025-07-16T01:51:00Z,82, °F,73, °F,74, %,S,7, mph,0, mph,30.03, in,0, in,Fair,US/Eastern
+2025-07-16T02:51:00Z,81, °F,73, °F,77, %,S,5, mph,0, mph,30.02, in,0, in,Fair,US/Eastern
+2025-07-16T03:51:00Z,81, °F,74, °F,79, %,SSW,3, mph,0, mph,30.02, in,0, in,Fair,US/Eastern

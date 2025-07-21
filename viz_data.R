@@ -13,21 +13,7 @@ library(ggforce)
 load(file = "data/nj_river_sites_metadata.RData")
 load(file = "data/nj_river_data.RData")
 
-
 # plot elevation for all sites
-sites_metadata |> 
-  arrange(desc(altitude))|>
-  mutate(site_name = as_factor(site_name)) |> 
-  ggplot(aes(y = altitude, x = site_name,color=basin_name,group = basin_name)) +
-  # facet_grid(basin_name ~ ., scales = "free_y") +
-  # remove x axis text
-  theme(axis.text.x = element_blank(),
-        axis.ticks.x = element_blank()) +
-  geom_line() +
-  labs(title = "Elevation of NJ River Sites",
-       y = "Elevation (ft)",
-       x = "Site Name")
-
 # join stream data with metadata
 stream_data_full <- stream_data |> 
   # remove rows with NA in gage_height_ft
@@ -40,6 +26,7 @@ stream_data_full <- stream_data |>
   group_by(site_number) |>
   fill(where(is.numeric), .direction = "down") |>
   left_join(sites_metadata, by = "site_number") |> 
+  ungroup() |> 
   select(basin_name, map_name, site_name,everything()) |> 
   select(-basin_code, -site_number) |> 
   arrange(desc(altitude))|>
@@ -50,8 +37,22 @@ stream_data_full <- stream_data |>
   arrange(datetime) |>
   group_by(site_name) |>
   mutate(gage_height_change = gage_height_ft - first(gage_height_ft)) |>
-  as_tibble() 
+  as_tibble()
 
+# ==============================================================================
+
+sites_metadata |> 
+  arrange(desc(altitude))|>
+  mutate(site_name = as_factor(site_name)) |> 
+  ggplot(aes(y = altitude, x = site_name,color=basin_name,group = basin_name)) +
+  # facet_grid(basin_name ~ ., scales = "free_y") +
+  # remove x axis text
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  geom_line() +
+  labs(title = "Elevation of NJ River Sites",
+       y = "Elevation (ft)",
+       x = "Site Name")
 
 plot_gage_height <- function(basin = stream_data_full$basin_name[2], this_time = stream_data_full$datetime[1000]) {
   stream_data_full |> 
@@ -103,8 +104,11 @@ plot_gage_height_animation <- function(basin = stream_data_full$basin_name[2]) {
 #plot_gage_height_animation(basin = "Passaic River Basin") |> 
 #  animate(nframes = length(unique(stream_data_full$datetime)), fps = 10, width = 800, height = 600)
 
+# ==============================================================================
 
 # create a grob with a circular analog 12-hour clock
+# adapted from code by Drew Conway
+# https://www.r-bloggers.com/2011/08/create-an-animated-clock-in-r-with-ggplot2-and-ffmpeg/
 create_analog_clock <- function(this_time_str = "2025-07-14 01:00:00") {
   this_time <- as.POSIXct(this_time_str)
   hour <- lubridate::hour(this_time)
@@ -160,6 +164,7 @@ create_analog_clock <- function(this_time_str = "2025-07-14 01:00:00") {
       panel.grid.major = element_blank()
     )
 }
+# ==============================================================================
 # # test
 # grid.newpage()
 # clock_grob <- create_analog_clock("2025-07-14 12:00")
@@ -256,31 +261,35 @@ combine_gage_height_plots <- function(basin = BASIN) {
   cat("Saved GIF to img/gage_height_change_", basin, ".gif\n")
 }
 
+# ==============================================================================
 basins <- levels(stream_data_full$basin_name)
 times <- stream_data_full |> 
   filter(datetime >= as.POSIXct("2025-07-14 16:00:00")) |>
   filter(datetime <= as.POSIXct("2025-07-15 08:00:00")) |> 
   pull(datetime) |> 
   unique()
-  # filter after 2025-07-14 16:00:00
-  # and before 2025-07-15 08:00:00
 
-# limit times to between 4pm on the first day and 8 am on the second
+# read weather data from csv
+rainfall <- read_csv("data/EWR_weather_2025-07-14.csv") |> 
+  select(datetime, precip) |> 
+  # set datetime to US/Eastern timezone
+  mutate(datetime = with_tz(datetime, tzone = "US/Eastern")) |> 
+  # change datetime to nearest 15 minutes
+  rename(datetime_orig = datetime) |>
+  mutate(datetime = round_date(datetime_orig, "15 minutes")) |> 
+  # add a column for cumulative precipitation
+  mutate(precip_cum = cumsum(precip))
+  
 
-# subset for test
-# times <- times[20:25]
-
-# expand_grid(basin = basins, time = times) |> 
-#  pmap(\(basin, time) save_gage_height_plot(basin = basin, this_time = time))
-
-#basins |> 
-#  map(combine_gage_height_plots)
-
-# convert to mp4 externally.  This let's you pause the anim
-# ffmpeg -i animated.gif -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" video.mp4
-# use ggmap to create a map of the basins
-
-
+cum_rainfall <- enframe(times,value = "datetime",name = NULL)  |> 
+  left_join(rainfall, by = "datetime") |> 
+  arrange(datetime) |> 
+  fill(precip_cum, .direction = "down") |>
+  # replace NA values in precip_cum with 0
+  mutate(precip_cum = ifelse(is.na(precip_cum), 0, precip_cum)) |>
+  select(datetime, precip_cum)
+  
+  
 # function to return bbox from extent of sites_metadata as a parameter
 get_bbox_from_metadata <- function(metadata = sites_metadata) {
   bbox <- c(
@@ -297,7 +306,7 @@ get_inset_loc <- function(bbox, size = 0.2, quadrant = "topleft") {
   width <- (bbox[3] - bbox[1]) * size
   height <- (bbox[4] - bbox[2]) * size
   
-  if (quadrant == "topright") {
+  loc <- if (quadrant == "topright") {
     return(c(bbox[3] - width, bbox[4] - height, bbox[3], bbox[4]))
   } else if (quadrant == "topleft") {
     return(c(bbox[1], bbox[4] - height, bbox[1] + width, bbox[4]))
@@ -308,7 +317,9 @@ get_inset_loc <- function(bbox, size = 0.2, quadrant = "topleft") {
   } else {
     stop("Invalid quadrant specified. Use 'topright', 'topleft', 'bottomright', or 'bottomleft'.")
   }
+  return(loc)
 }
+
 
 # function to compute the geographic center of each basin
 get_basin_centers <- function(metadata) {
@@ -322,20 +333,45 @@ get_basin_centers <- function(metadata) {
     mutate(basin_name = str_replace_all(basin_name, " River ", "\n"))
 }
 
-# get basemap
+get_metadata_center <- function(metadata = sites_metadata) {
+  metadata |> 
+    summarise(
+      longitude = mean(longitude, na.rm = TRUE),
+      latitude = mean(latitude, na.rm = TRUE)
+    )
+}
+get_metadata_center()
+
 bbox <- get_bbox_from_metadata(sites_metadata)
 inset_loc <- bbox |>  get_inset_loc()
 
-basemap <- get_stadiamap(bbox = bbox,
-                         zoom = 10, maptype = "stamen_terrain")
-#basemap <- get_stadiamap(bbox = bbox,
-#                         zoom = 10, maptype = "stamen_toner")
-# plot basemap with basin polygons
+size_precip_bar <- function(this_time = times[1], rainfall = cum_rainfall,inset = inset_loc) {
+  # scale the cumulative precipitation to a range of 0 to 1
+  inset_range <- inset_loc[4] - inset_loc[2]
+  scaled <- pull(filter(rainfall,datetime == this_time),precip_cum)/max(rainfall$precip_cum)*inset_range
+  return(scaled)
+}
 
+# get basemap
+
+# basemap1 <- get_stadiamap(bbox = bbox,
+#                         zoom = 10, maptype = "stamen_terrain")
+basemap2 <- get_stadiamap(bbox = bbox,
+                          zoom = 10, maptype = "alidade_bright")
+#basemap3 <- get_googlemap(center = as.numeric(paste(get_metadata_center())),
+#                          zoom = 10, maptype = "roadmap")
 
 map_gage_height <- function(this_time = stream_data_full$datetime[1]) {
-  gg <- ggmap(basemap) +
+  gg <- ggmap(basemap2) +
     coord_cartesian() +
+    # add the clock to the plot as an inset
+    annotation_custom(
+      grob = ggplotGrob(create_analog_clock(this_time)),
+      # use inset_loc to position annotation
+      xmin = inset_loc[1], xmax = inset_loc[3],
+      ymin = inset_loc[2],
+      ymax = inset_loc[4]) +
+
     geom_point(
       data = stream_data_full |> filter(datetime == this_time),
       aes(
@@ -360,20 +396,48 @@ map_gage_height <- function(this_time = stream_data_full$datetime[1]) {
       size = 5,
       hjust = -0.1
     ) +
+    # add a narrow rectangle to the right of the  annotation proportional to the height of the cumulative rainfall
+    annotate("rect",
+             xmin = inset_loc[3],
+             xmax = inset_loc[3] + 0.05,
+             ymin = inset_loc[2], 
+             ymax = inset_loc[2] + size_precip_bar(this_time),
+             fill = "navy", alpha = .9) +
+    # draw a white box around the text
+    annotate("rect",
+             xmin = inset_loc[3] - .02,
+             xmax = inset_loc[3] + 0.07,
+             ymin = inset_loc[2] - 0.05, 
+             ymax = inset_loc[2] - 0.01,
+             fill = "white", alpha = 1) +
+    annotate("text",
+             x = inset_loc[3] + 0.025,
+             y = inset_loc[2] - 0.01,
+             label = paste0("Rain At EWR\n",
+                            pull(filter(cum_rainfall,datetime == this_time),precip_cum),
+                            " in."),
+             fontface = "bold",
+             hjust = 0.5,
+             vjust = 1,
+             size = 3) +
+    # end of precipitation bar drawing
     theme_minimal() +
     theme(legend.position = "none",
           axis.text = element_blank(),
-          axis.ticks = element_blank())
+          axis.ticks = element_blank()) +
+    # add a title
+    labs(title = "Gage Height Change",
+         subtitle = paste("Time:", this_time),
+         caption = "Data from USGS and NJDEP")
   gg + coord_sf()
 }
 
-map_gage_height(this_time = times[1])
+map_gage_height(this_time = times[2])
 
 # save the map with gage height change for a specific time
 save_map_gage_height <- function(this_time = stream_data_full$datetime[1000]) {
   cat("Saving...\n")
-  gg <- map_gage_height(this_time) + ggtitle(paste("Gage Height Change at", this_time),
-                                             subtitle = "Northern NJ River Basins")
+  gg <- map_gage_height(this_time)
   
   # compute the number of minutes between this_time and the first time in the dataset
   time_diff <- sprintf("%04d", as.numeric(difftime(this_time, min(times), units = "mins")))
@@ -412,6 +476,7 @@ combine_gage_height_maps <- function() {
 }
 
 # combine
+combine_gage_height_maps()
 
 # create a leaflet map of metadata sites
 library(leaflet)
