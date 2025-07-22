@@ -1,81 +1,60 @@
-
-create_analog_clock <- function(this_time_str = "2025-07-14 01:00:00") {
-  # one minute granularity
-  this_time <- as.POSIXct(this_time_str)
-  hour <- lubridate::hour(this_time)
-  minute <- lubridate::minute(this_time)
-  i <- hour * 60 + minute + 1
-  
-  hour.pos <- seq(0, 12, 12 / (12 * 60))[1:720]
-  min.pos <- seq(0, 12, 12 / 60)[1:60]
-  all.hours <- rep(hour.pos, 2)
-  all.times <- cbind(all.hours, min.pos, 24)
-  
-  cur.time <- data.frame(list(
-    times = c(all.times[i, 1], all.times[i, 2]),
-    hands = c(.5, 1),
-    hand_type = c("hour", "minute")
-  ))
-  
-  arrow_spec <- arrow(angle = 30, length = unit(0.25, "inches"),
-        ends = "last", type = "open")
-  
-  ggplot(cur.time, aes(xmin = times, xmax = times + 0.1, ymin = 0, ymax = hands, fill = hand_type)) +
-    # geom_rect(alpha = 1) +
-    geom_segment(
-      aes(x = times, xend = times, y = 0, yend = hands),
-      size = 5, color = c("black","red"), alpha = 0.8,lineend = "round"
-    ) +
-    scale_fill_manual(values = c("hour" = "black", "minute" = "red")) +
-    # annotate with AM/PM text
-    annotate("text", x = 6, y = 0.5, label = ifelse(hour < 12, "AM", "PM"), size = 6, fontface = "bold") +
-    scale_x_continuous(
-      limits = c(0, all.hours[length(all.hours)]),
-      breaks = 0:11,
-      labels = c(12, 1:11)
-    ) +
-    scale_y_continuous(limits = c(0, 1.1)) +
-    theme_bw() +
-    coord_polar() +
-    theme(
-      legend.position = "none",
-      axis.text.x = element_text(size = 12, face = "bold"),
-      axis.text.y = element_blank(),
-      axis.title = element_blank(),
-      axis.ticks = element_blank(),
-      panel.grid.major = element_blank()
-    )
-}
-create_analog_clock("2025-07-14 11:00:01") |>
-  print()
-
-
-library(gapminder)
-library(dplyr)
 library(ggplot2)
-library(gganimate)
 
-gapminder_interpolated <- gapminder |>
-  group_by(country) |>
-  tidyr::complete(year = seq(min(gapminder$year), max(gapminder$year), 
-                             by = 1)) |>
-  tidyr::fill(continent, .direction = "downup") |>
-  mutate(lifeExp = approx(year, lifeExp, year, rule = 2)$y,
-         pop = approx(year, pop, year, rule = 2)$y,
-         gdpPercap = approx(year, gdpPercap, year, rule = 2)$y
-  ) |>
-  ungroup()
+# Define a function that returns multiple annotate layers as a list
+my_annotations <- function(label_positions, text_color = "blue", font_size = 4) {
+  lapply(label_positions, function(pos) {
+    annotate("text", x = pos$x, y = pos$y, label = pos$label, 
+             color = text_color, size = font_size)
+  })
+}
 
-ggplot(gapminder_interpolated,
-       aes(gdpPercap, lifeExp, size = pop, color = country)) +
-  geom_point(alpha = 0.7, show.legend = FALSE) +
-  scale_colour_manual(values = country_colors) +
-  scale_size(range = c(2, 12)) +
-  scale_x_log10() +
-  facet_wrap(~continent) +
-  geom_text(aes(x = 1000, y = 80, label = as.character(year)),
-            hjust = 0, vjust = 1, size = 3.5, color = 'grey50') +
-  labs(title = 'Year: {frame_time}', 
-       x = 'GDP per capita', y = 'life expectancy') +
-  transition_time(as.integer(year)) +
-  ease_aes('linear')
+# Example usage
+label_data <- list(
+  list(x = 2, y = 4, label = "Point A"),
+  list(x = 5, y = 7, label = "Point B"),
+  list(x = 8, y = 2, label = "Point C")
+)
+
+ggplot(mtcars, aes(wt, mpg)) +
+  geom_point() +
+  my_annotations(label_data)
+
+
+custom_column <- function(this_time = times[1], inset = inset_loc) {
+  
+  size_precip_bar <- function(this_time = times[1], rainfall = cum_rainfall,inset = inset_loc) {
+    # scale the cumulative precipitation to a range of 0 to 1
+    inset_range <- inset_loc[4] - inset_loc[2] - .01
+    scaled <- pull(filter(rainfall,datetime == this_time),precip_cum)/max(rainfall$precip_cum)*inset_range
+    return(scaled)
+  }
+  
+list(
+  # add a narrow rectangle to the right of the  annotation proportional to the height of the cumulative rainfall
+  annotate("rect",
+           xmin = inset[3],
+           xmax = inset[3] + 0.05,
+           ymin = inset[2], 
+           ymax = inset[2] + size_precip_bar(this_time),
+           fill = "navy", alpha = .9),
+  # draw a white box around the text
+  annotate("rect",
+           xmin = inset[3] - .02,
+           xmax = inset[3] + 0.07,
+           ymin = inset[2] - 0.05, 
+           ymax = inset[2] ,
+           color = "black",
+           fill = "white", alpha = 1),
+  annotate("text",
+           x = inset[3] + 0.025,
+           y = inset[2] - 0.01,
+           label = paste0("Rain At EWR\n",
+                          pull(filter(cum_rainfall,datetime == this_time),precip_cum),
+                          " in."),
+           fontface = "bold",
+           hjust = 0.5,
+           vjust = 1,
+           size = 3)
+)
+}
+custom_column()

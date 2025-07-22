@@ -345,21 +345,67 @@ get_metadata_center()
 bbox <- get_bbox_from_metadata(sites_metadata)
 inset_loc <- bbox |>  get_inset_loc()
 
-size_precip_bar <- function(this_time = times[1], rainfall = cum_rainfall,inset = inset_loc) {
-  # scale the cumulative precipitation to a range of 0 to 1
-  inset_range <- inset_loc[4] - inset_loc[2]
-  scaled <- pull(filter(rainfall,datetime == this_time),precip_cum)/max(rainfall$precip_cum)*inset_range
-  return(scaled)
+custom_column <- function(this_time = times[1], inset = inset_loc) {
+  # return a list of ggplot2 annotations to draw a custom column with a cumulative precipitation bar
+  
+  size_precip_bar <- function(this_time = times[1], rainfall = cum_rainfall,inset = inset_loc) {
+    # scale the cumulative precipitation to a range of 0 to 1
+    inset_range <- inset_loc[4] - inset_loc[2] - .01
+    scaled <- pull(filter(rainfall,datetime == this_time),precip_cum)/max(rainfall$precip_cum)*inset_range
+    return(scaled)
+  }
+  
+  list(
+    # add a narrow rectangle to the right of the  annotation proportional to the height of the cumulative rainfall
+    annotate("rect",
+             xmin = inset[3],
+             xmax = inset[3] + 0.05,
+             ymin = inset[2], 
+             ymax = inset[2] + size_precip_bar(this_time),
+             fill = "navy", alpha = .9),
+    # add a black border around the rectangle
+    annotate("rect",
+             xmin = inset[3],
+             xmax = inset[3] + 0.05,
+             ymin = inset[2], 
+             ymax = inset[4]-.01,
+             color = "black", fill = NA, alpha = 1),
+    # draw a white box around the text
+    annotate("rect",
+             xmin = inset[3] - .02,
+             xmax = inset[3] + 0.07,
+             ymin = inset[2] - 0.05, 
+             ymax = inset[2] ,
+             color = "black",
+             fill = "white", alpha = 1),
+    annotate("text",
+             x = inset[3] + 0.025,
+             y = inset[2] - 0.01,
+             label = paste0("Rain At EWR\n",
+                            pull(filter(cum_rainfall,datetime == this_time),precip_cum),
+                            " in."),
+             fontface = "bold",
+             hjust = 0.5,
+             vjust = 1,
+             size = 3)
+  )
 }
 
 # get basemap
 
-# basemap1 <- get_stadiamap(bbox = bbox,
-#                         zoom = 10, maptype = "stamen_terrain")
-basemap2 <- get_stadiamap(bbox = bbox,
+basemap_terrain <- get_stadiamap(bbox = bbox,
+                         zoom = 10, maptype = "stamen_terrain")
+basemap_alidaede <- get_stadiamap(bbox = bbox,
                           zoom = 10, maptype = "alidade_bright")
-#basemap3 <- get_googlemap(center = as.numeric(paste(get_metadata_center())),
-#                          zoom = 10, maptype = "roadmap")
+basemap_google <- get_googlemap(center = as.numeric(paste(get_metadata_center())),
+                          zoom = 10, maptype = "roadmap")
+# save all basemaps
+saveRDS(basemap_terrain, file = "data/basemap_terrain.RDS")
+saveRDS(basemap_alidaede, file = "data/basemap_alidaede.RDS")
+saveRDS(basemap_google, file = "data/basemap_google.RDS")
+# load basemap
+basemap <- readRDS("data/basemap_alidaede.RDS")
+
 
 map_gage_height <- function(this_time = stream_data_full$datetime[1]) {
   gg <- ggmap(basemap2) +
@@ -396,43 +442,23 @@ map_gage_height <- function(this_time = stream_data_full$datetime[1]) {
       size = 5,
       hjust = -0.1
     ) +
-    # add a narrow rectangle to the right of the  annotation proportional to the height of the cumulative rainfall
-    annotate("rect",
-             xmin = inset_loc[3],
-             xmax = inset_loc[3] + 0.05,
-             ymin = inset_loc[2], 
-             ymax = inset_loc[2] + size_precip_bar(this_time),
-             fill = "navy", alpha = .9) +
-    # draw a white box around the text
-    annotate("rect",
-             xmin = inset_loc[3] - .02,
-             xmax = inset_loc[3] + 0.07,
-             ymin = inset_loc[2] - 0.05, 
-             ymax = inset_loc[2] - 0.01,
-             fill = "white", alpha = 1) +
-    annotate("text",
-             x = inset_loc[3] + 0.025,
-             y = inset_loc[2] - 0.01,
-             label = paste0("Rain At EWR\n",
-                            pull(filter(cum_rainfall,datetime == this_time),precip_cum),
-                            " in."),
-             fontface = "bold",
-             hjust = 0.5,
-             vjust = 1,
-             size = 3) +
-    # end of precipitation bar drawing
+    # precipitation bar drawing
+    custom_column(this_time = this_time, inset = inset_loc) +
     theme_minimal() +
-    theme(legend.position = "none",
-          axis.text = element_blank(),
+    theme(axis.text = element_blank(),
           axis.ticks = element_blank()) +
+    # show a legend only for gage height change, not basin name
+    guides(color = "none") +
+    guides(fill = "none") +
     # add a title
-    labs(title = "Gage Height Change",
+    labs(title = "Northern NJ Flooding, July 14-15, 2025",
          subtitle = paste("Time:", this_time),
-         caption = "Data from USGS and NJDEP")
+         caption = "Data from USGS and NJDEP",
+         size = "Gage Height Change (ft)")
   gg + coord_sf()
 }
 
-map_gage_height(this_time = times[2])
+map_gage_height(this_time = times[10])
 
 # save the map with gage height change for a specific time
 save_map_gage_height <- function(this_time = stream_data_full$datetime[1000]) {
