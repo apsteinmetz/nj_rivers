@@ -533,8 +533,6 @@ save_map_gage_height <- function(this_time = stream_data_full$datetime[1000]) {
          width = 10,
          height = 8,
          dpi = 150)
-  cat("Reducing File Size...\n")
-  # reduce_image_size(filename)
 }
 
 walk(times, save_map_gage_height)
@@ -566,7 +564,13 @@ combine_gage_height_maps <- function() {
 combine_gage_height_maps()
 
 # convert gif to mp4 using external ffmpeg
-system("ffmpeg -y -i gif/gage_height_map.gif -movflags faststart -pix_fmt yuv420p -vf scale=1280:-1 gif/gage_height_map.mp4")
+system("ffmpeg -y -i gif/gage_height_map.gif -movflags faststart -pix_fmt yuv420p -vf scale=1280:-1 anim/gage_height_map.mp4")
+# detect whether system is windows or unix-like and delete the gif file using the correct command
+if (Sys.info()["sysname"] == "Windows") {
+  system("del gif/gage_height_map.gif")
+} else {
+  system("rm gif/gage_height_map.gif")
+}
 
 
 
